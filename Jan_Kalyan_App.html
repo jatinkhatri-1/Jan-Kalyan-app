@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jan Kalyan - Indian Welfare Schemes</title>
+    <!-- Tailwind CSS for Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React and Babel for Browser Execution -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // Mocking Lucide Icons for standalone HTML environment
+        const Icon = ({ name, className = "" }) => {
+            useEffect(() => {
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }, [name]);
+            return <i data-lucide={name} className={className}></i>;
+        };
+
+        const SCHEMES = [
+            {
+                id: 'mgnrega',
+                title: 'MGNREGA (Guaranteed Work)',
+                titleHindi: 'मनरेगा (रोजगार गारंटी)',
+                icon: "hammer",
+                iconColor: "text-amber-700",
+                shortDesc: '100 days of guaranteed wage employment',
+                fullDesc: 'The Mahatma Gandhi National Rural Employment Guarantee Act (MGNREGA) guarantees 100 days of wage employment in a financial year to a rural household whose adult members volunteer to do unskilled manual work.',
+                benefits: ['Guaranteed Job Card', 'Unskilled Manual Work', 'Payment within 15 days'],
+                eligibility: { ageMin: 18, ageMax: 100, incomeMax: 1000000 },
+                action: 'Apply at Gram Panchayat',
+                actionHindi: 'ग्राम पंचायत में आवेदन करें',
+                earningTip: 'Best option if other benefits are delayed. Work is usually provided within 15 days of demand.'
+            },
+            {
+                id: 'ayushman',
+                title: 'Ayushman Bharat',
+                titleHindi: 'आयुष्मान भारत',
+                icon: "heart",
+                iconColor: "text-red-500",
+                shortDesc: 'Free treatment up to ₹5 Lakhs',
+                fullDesc: 'Get free medical treatment up to ₹5 Lakhs per year in many private and government hospitals. Now covers all senior citizens aged 70+ regardless of income.',
+                benefits: ['Free Hospitalization', 'Covers Surgery', 'Medicine Costs'],
+                eligibility: { ageMin: 0, ageMax: 120, incomeMax: 25000 },
+                action: 'Visit nearest CSC Center or Government Hospital',
+                actionHindi: 'नजदीकी CSC सेंटर या सरकारी अस्पताल जाएँ',
+                earningTip: 'If card issuance is delayed, approach the "Ayushman Mitra" at the hospital desk for immediate help.'
+            },
+            {
+                id: 'pm-awas',
+                title: 'PM Awas Yojana',
+                titleHindi: 'प्रधान मंत्री आवास योजना',
+                icon: "home",
+                iconColor: "text-orange-500",
+                shortDesc: 'Money to build your own house',
+                fullDesc: 'Financial assistance to build a "Pucca House" or buy a flat. Subsidy varies based on your location (Urban/Rural) and income.',
+                benefits: ['Subsidy on Home Loan', 'Money for Construction', 'Toilet Construction'],
+                eligibility: { ageMin: 18, ageMax: 70, incomeMax: 50000 },
+                action: 'Contact Gram Panchayat or Municipality Office',
+                actionHindi: 'ग्राम पंचायत या नगर पालिका कार्यालय से संपर्क करें',
+                earningTip: 'While waiting for the house installment, you can work as a laborer on your own house construction under MGNREGA for 90 days wages.'
+            },
+            {
+                id: 'eshram',
+                title: 'e-Shram Card',
+                titleHindi: 'ई-श्रम कार्ड',
+                icon: "briefcase",
+                iconColor: "text-blue-500",
+                shortDesc: 'Benefits for daily wage workers',
+                fullDesc: 'Accidental insurance of ₹2 Lakhs and social security benefits. Essential for construction workers, domestic helpers, and laborers.',
+                benefits: ['₹2 Lakh Insurance', 'Pension Access', 'Skill Training'],
+                eligibility: { ageMin: 16, ageMax: 59, incomeMax: 15000 },
+                action: 'Register at nearest CSC Center',
+                actionHindi: 'नजदीकी CSC सेंटर पर पंजीकरण करें',
+                earningTip: 'Use your e-Shram UAN to apply for skill training schemes (PMKVY) to get better paying jobs.'
+            },
+            {
+                id: 'pm-kisan',
+                title: 'PM Kisan',
+                titleHindi: 'पीएम किसान',
+                icon: "sun",
+                iconColor: "text-yellow-600",
+                shortDesc: '₹6,000 per year for farmers',
+                fullDesc: 'Direct cash support for farmer families with land. ₹2,000 is paid every 4 months directly into the bank account.',
+                benefits: ['₹6,000 Annual Cash', 'Direct Bank Transfer', 'No Middlemen'],
+                eligibility: { ageMin: 18, ageMax: 100, incomeMax: 200000 },
+                action: 'Visit Agriculture Dept Office or CSC',
+                actionHindi: 'कृषि विभाग कार्यालय या CSC पर जाएँ',
+                earningTip: 'If payments are stuck, check the beneficiary status on pmkisan.gov.in or call 155261.'
+            }
+        ];
+
+        const CustomButton = ({ onClick, children, variant = 'primary', className = "" }) => {
+            const baseStyle = "w-full py-4 px-6 rounded-2xl text-xl font-bold shadow-lg transform transition-all active:scale-95 flex items-center justify-center gap-3";
+            const variants = {
+                primary: "bg-orange-500 text-white hover:bg-orange-600",
+                secondary: "bg-white text-gray-800 border-2 border-gray-100 hover:bg-gray-50",
+                danger: "bg-red-500 text-white hover:bg-red-600",
+                outline: "border-2 border-orange-500 text-orange-500 bg-transparent"
+            };
+            return <button onClick={onClick} className={`${baseStyle} ${variants[variant]} ${className}`}>{children}</button>;
+        };
+
+        const CustomCard = ({ children, className = "", onClick }) => (
+            <div onClick={onClick} className={`bg-white rounded-3xl p-6 shadow-md border border-gray-100 ${onClick ? 'cursor-pointer hover:shadow-xl transition-shadow' : ''} ${className}`}>
+                {children}
+            </div>
+        );
+
+        function WelfareApp() {
+            const [step, setStep] = useState(1);
+            const [userData, setUserData] = useState({ age: null, income: null, name: '' });
+            const [selectedScheme, setSelectedScheme] = useState(null);
+            const [isLoggedIn, setIsLoggedIn] = useState(false);
+            const [reportData, setReportData] = useState({ location: '', officer: '', description: '' });
+
+            const getEligibleSchemes = () => {
+                return SCHEMES.filter(scheme => {
+                    if (scheme.id === 'mgnrega') return true;
+                    if (userData.age < scheme.eligibility.ageMin || userData.age > scheme.eligibility.ageMax) return false;
+                    if (userData.income > scheme.eligibility.incomeMax) return false;
+                    return true;
+                });
+            };
+
+            const handleRestart = () => {
+                setStep(1);
+                setUserData(prev => ({ age: null, income: null, name: prev.name }));
+                setSelectedScheme(null);
+                setReportData({ location: '', officer: '', description: '' });
+            };
+
+            const handleLogin = (e) => {
+                e.preventDefault();
+                setIsLoggedIn(true);
+                setUserData(prev => ({ ...prev, name: 'Jatin' }));
+                setStep(1);
+            };
+
+            const handleLogout = () => {
+                setIsLoggedIn(false);
+                setUserData({ age: null, income: null, name: '' });
+                setStep(1);
+            };
+
+            const handleGenerateEmail = (e) => {
+                e.preventDefault();
+                const recipient = "vigilance@nic.in";
+                const subject = encodeURIComponent(`Corruption Complaint - ${reportData.location}`);
+                const body = encodeURIComponent(
+                    `Official Corruption Report\n\nLocation: ${reportData.location}\nOfficer/Dept: ${reportData.officer}\nDetails: ${reportData.description}\n\n[Photos/Videos attached below]`
+                );
+                window.location.href = `mailto:${recipient}?subject=${subject}&body=${body}`;
+            };
+
+            const screens = {
+                1: (
+                    <div className="flex flex-col h-full bg-white relative overflow-hidden">
+                        <div className="absolute top-0 w-full h-40 bg-orange-100 -z-10 rounded-b-[3rem]"></div>
+                        <div className="p-4 flex justify-between items-center mt-2">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg" alt="Emblem" className="w-8 h-8" />
+                            {isLoggedIn ? (
+                                <div className="flex items-center gap-2 bg-white px-3 py-1 rounded-full shadow-sm border border-gray-200">
+                                    <span className="font-bold text-gray-700 text-sm">{userData.name}</span>
+                                    <button onClick={handleLogout}><Icon name="log-out" className="w-4 h-4 text-red-400" /></button>
+                                </div>
+                            ) : (
+                                <button onClick={() => setStep(6)} className="text-orange-600 font-bold bg-white px-4 py-2 rounded-full shadow-sm">Login / लॉग इन</button>
+                            )}
+                        </div>
+                        <div className="flex flex-col h-full z-10 p-6 pt-10 overflow-y-auto no-scrollbar">
+                            <div className="text-center mb-8">
+                                <h1 className="text-4xl font-extrabold text-gray-800">Jan Kalyan</h1>
+                                <h2 className="text-xl text-orange-600 font-medium">जन कल्याण</h2>
+                            </div>
+                            <div className="space-y-4 pb-20">
+                                <CustomButton onClick={() => setStep(2)}>Find Schemes / योजनाएं खोजें <Icon name="arrow-right" /></CustomButton>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div onClick={() => setStep(7)} className="bg-red-50 p-6 rounded-3xl border border-red-100 flex flex-col items-center gap-2 cursor-pointer active:scale-95 transition-all">
+                                        <Icon name="alert-triangle" className="text-red-500 w-8 h-8" />
+                                        <span className="font-bold text-gray-800 text-sm">Report Bribery</span>
+                                    </div>
+                                    <div onClick={() => setStep(8)} className="bg-blue-50 p-6 rounded-3xl border border-blue-100 flex flex-col items-center gap-2 cursor-pointer active:scale-95 transition-all">
+                                        <Icon name="users" className="text-blue-500 w-8 h-8" />
+                                        <span className="font-bold text-gray-800 text-sm">NGO Help</span>
+                                    </div>
+                                </div>
+                                <CustomButton onClick={() => { setSelectedScheme(SCHEMES.find(s => s.id === 'mgnrega')); setStep(5); }} variant="secondary" className="border-amber-200 bg-amber-50">
+                                    <Icon name="hammer" className="text-amber-700" /> Need Work Immediately?
+                                </CustomButton>
+                            </div>
+                        </div>
+                    </div>
+                ),
+                2: (
+                    <div className="p-6 bg-gray-50 h-full">
+                        <button onClick={() => setStep(1)} className="p-3 bg-white rounded-full shadow-sm mb-8"><Icon name="arrow-left" /></button>
+                        <h2 className="text-3xl font-bold mb-8 text-gray-800">Your Age Group? / उम्र?</h2>
+                        <div className="space-y-4">
+                            <CustomCard onClick={() => { setUserData({...userData, age: 25}); setStep(3); }}>
+                                <h3 className="text-2xl font-bold">18 - 40 Years</h3>
+                                <p className="text-gray-500">Youth / युवा</p>
+                            </CustomCard>
+                            <CustomCard onClick={() => { setUserData({...userData, age: 50}); setStep(3); }}>
+                                <h3 className="text-2xl font-bold">41 - 59 Years</h3>
+                                <p className="text-gray-500">Middle Age / मध्यम आयु</p>
+                            </CustomCard>
+                            <CustomCard onClick={() => { setUserData({...userData, age: 70}); setStep(3); }}>
+                                <h3 className="text-2xl font-bold">60+ Years</h3>
+                                <p className="text-gray-500">Senior Citizen / बुजुर्ग</p>
+                            </CustomCard>
+                        </div>
+                    </div>
+                ),
+                3: (
+                    <div className="p-6 bg-gray-50 h-full">
+                        <button onClick={() => setStep(2)} className="p-3 bg-white rounded-full shadow-sm mb-8"><Icon name="arrow-left" /></button>
+                        <h2 className="text-3xl font-bold mb-2 text-gray-800">Monthly Income? / आय?</h2>
+                        <p className="text-gray-500 mb-8">What is your family income per month?</p>
+                        <div className="space-y-4">
+                            <CustomCard onClick={() => { setUserData({...userData, income: 5000}); setStep(4); }}>
+                                <h3 className="text-2xl font-bold">Less than ₹10,000</h3>
+                                <p className="text-gray-500">BPL / गरीबी रेखा के नीचे</p>
+                            </CustomCard>
+                            <CustomCard onClick={() => { setUserData({...userData, income: 20000}); setStep(4); }}>
+                                <h3 className="text-2xl font-bold">₹10,000 - ₹25,000</h3>
+                                <p className="text-gray-500">Low Income / कम आय</p>
+                            </CustomCard>
+                            <CustomCard onClick={() => { setUserData({...userData, income: 60000}); setStep(4); }}>
+                                <h3 className="text-2xl font-bold">More than ₹25,000</h3>
+                                <p className="text-gray-500">Middle Income / मध्यम आय</p>
+                            </CustomCard>
+                        </div>
+                    </div>
+                ),
+                4: (
+                    <div className="flex flex-col h-full bg-gray-50">
+                        <div className="bg-orange-500 p-6 rounded-b-[2rem] shadow-lg mb-4 text-white">
+                            <div className="flex justify-between items-center mb-4">
+                                <button onClick={() => setStep(3)} className="bg-orange-600 p-2 rounded-full"><Icon name="arrow-left" /></button>
+                                <h2 className="text-2xl font-bold">Your Schemes</h2>
+                                <button onClick={handleRestart} className="text-sm bg-white text-orange-600 px-3 py-1 rounded-full font-bold">Reset</button>
+                            </div>
+                            <p className="text-sm opacity-80 font-medium italic text-center">Available help for your profile</p>
+                        </div>
+                        <div className="px-6 pb-20 space-y-4 overflow-y-auto h-full no-scrollbar">
+                            {getEligibleSchemes().map(scheme => (
+                                <CustomCard key={scheme.id} onClick={() => { setSelectedScheme(scheme); setStep(5); }}>
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-3 bg-gray-50 rounded-2xl"><Icon name={scheme.icon} className={`w-8 h-8 ${scheme.iconColor}`} /></div>
+                                        <div className="flex-1">
+                                            <h3 className="font-bold text-gray-800 text-lg">{scheme.title}</h3>
+                                            <p className="text-gray-500 text-sm leading-tight">{scheme.shortDesc}</p>
+                                        </div>
+                                        <Icon name="arrow-right" className="text-gray-300" />
+                                    </div>
+                                </CustomCard>
+                            ))}
+                        </div>
+                    </div>
+                ),
+                5: selectedScheme && (
+                    <div className="flex flex-col h-full bg-white relative">
+                        <div className="bg-blue-50 p-10 rounded-b-[3rem] flex flex-col items-center relative">
+                            <button onClick={() => setStep(4)} className="absolute top-6 left-6 p-3 bg-white rounded-full shadow-md"><Icon name="arrow-left" /></button>
+                            <div className="p-4 bg-white rounded-full shadow-xl mb-4"><Icon name={selectedScheme.icon} className={`w-8 h-8 ${selectedScheme.iconColor}`} /></div>
+                            <h1 className="text-2xl font-extrabold text-center text-gray-800">{selectedScheme.title}</h1>
+                        </div>
+                        <div className="p-6 overflow-y-auto pb-24 h-full no-scrollbar">
+                            <div className="mb-6">
+                                <h4 className="text-xs font-bold text-gray-400 uppercase mb-2">Description</h4>
+                                <p className="text-lg font-medium text-gray-700">{selectedScheme.fullDesc}</p>
+                            </div>
+                            <div className="space-y-3 mb-6">
+                                <h4 className="text-xs font-bold text-gray-400 uppercase mb-2">Benefits</h4>
+                                {selectedScheme.benefits.map((b, i) => (
+                                    <div key={i} className="flex gap-2 items-center bg-green-50 p-3 rounded-xl border border-green-100">
+                                        <Icon name="check-circle" className="text-green-500 w-5 h-5" /> <span className="font-bold text-gray-700">{b}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="p-5 bg-gray-50 rounded-2xl border border-gray-200 mb-4">
+                                <h4 className="font-bold mb-1">Apply Here:</h4>
+                                <p className="text-gray-700">{selectedScheme.action}</p>
+                                <p className="text-orange-600 font-bold italic">{selectedScheme.actionHindi}</p>
+                            </div>
+                            <div className="p-5 bg-amber-50 rounded-2xl border border-amber-100">
+                                <h4 className="font-bold mb-1 text-amber-800">Earning Tip:</h4>
+                                <p className="text-sm text-amber-700">{selectedScheme.earningTip}</p>
+                            </div>
+                        </div>
+                        <div className="absolute bottom-0 w-full p-4 bg-white border-t"><CustomButton onClick={() => setStep(1)} variant="outline">Home</CustomButton></div>
+                    </div>
+                ),
+                6: (
+                    <div className="p-6 bg-white h-full relative">
+                        <button onClick={() => setStep(1)} className="p-3 bg-gray-100 rounded-full mb-8"><Icon name="arrow-left" /></button>
+                        <div className="flex flex-col items-center mt-10">
+                            <div className="p-5 bg-orange-100 rounded-full mb-4"><Icon name="lock" className="text-orange-500 w-10 h-10" /></div>
+                            <h2 className="text-3xl font-bold">Login / लॉग इन</h2>
+                            <form onSubmit={handleLogin} className="w-full mt-10 space-y-4">
+                                <input type="tel" placeholder="Mobile Number" className="w-full p-5 bg-gray-50 rounded-2xl border border-gray-200 outline-none focus:border-orange-500" required />
+                                <input type="password" placeholder="OTP (Try 1234)" className="w-full p-5 bg-gray-50 rounded-2xl border border-gray-200 outline-none focus:border-orange-500" required />
+                                <CustomButton>Login Securely</CustomButton>
+                            </form>
+                        </div>
+                    </div>
+                ),
+                7: (
+                    <div className="p-6 bg-white h-full overflow-y-auto no-scrollbar">
+                        <button onClick={() => setStep(1)} className="p-3 bg-gray-100 rounded-full mb-6"><Icon name="arrow-left" /></button>
+                        <h2 className="text-2xl font-bold text-red-600 mb-6">Report Bribery / भ्रष्टाचार</h2>
+                        <div className="space-y-4 mb-6">
+                            <div className="bg-red-50 p-4 rounded-xl border border-red-100 text-xs font-bold text-red-700">
+                                We do not store your data. We help you email the authorities directly.
+                            </div>
+                            <a href="tel:1064" className="flex items-center gap-4 bg-green-50 p-4 rounded-2xl border border-green-100">
+                                <Icon name="phone" className="text-green-600" /> <span className="font-bold">Call Helpline 1064</span>
+                            </a>
+                            <form onSubmit={handleGenerateEmail} className="space-y-4 pt-4 border-t">
+                                <input type="text" placeholder="Location" className="w-full p-4 bg-gray-50 rounded-xl border border-gray-200" required value={reportData.location} onChange={e => setReportData({...reportData, location: e.target.value})} />
+                                <input type="text" placeholder="Officer Name" className="w-full p-4 bg-gray-50 rounded-xl border border-gray-200" required value={reportData.officer} onChange={e => setReportData({...reportData, officer: e.target.value})} />
+                                <textarea placeholder="Describe incident..." className="w-full p-4 bg-gray-50 rounded-xl border border-gray-200 h-24" required value={reportData.description} onChange={e => setReportData({...reportData, description: e.target.value})}></textarea>
+                                <div className="bg-gray-100 p-3 rounded-xl flex gap-2 items-center text-xs text-gray-500"><Icon name="paperclip" className="w-4 h-4" /> Please attach Video/Photo in the next step.</div>
+                                <CustomButton variant="danger"><Icon name="mail" /> Generate Email Report</CustomButton>
+                            </form>
+                        </div>
+                    </div>
+                ),
+                8: (
+                    <div className="p-6 bg-white h-full overflow-y-auto no-scrollbar">
+                        <button onClick={() => setStep(1)} className="p-3 bg-gray-100 rounded-full mb-6"><Icon name="arrow-left" /></button>
+                        <h2 className="text-2xl font-bold mb-6">NGO Help / सहायता</h2>
+                        <div className="space-y-4">
+                            <div className="bg-blue-600 p-6 rounded-3xl text-white shadow-lg">
+                                <h3 className="font-bold text-xl mb-1">NGO Darpan Portal</h3>
+                                <p className="text-sm opacity-80 mb-4">Search registered NGOs across India.</p>
+                                <a href="https://ngodarpan.gov.in" target="_blank" className="bg-white text-blue-600 px-4 py-2 rounded-xl font-bold inline-block">Visit Website</a>
+                            </div>
+                            <CustomCard className="flex items-center gap-4"><Icon name="phone" className="text-green-600" /> <div><h4 className="font-bold">Kisan Help</h4><p className="text-sm text-gray-500">1800-180-1551</p></div></CustomCard>
+                            <CustomCard className="flex items-center gap-4"><Icon name="users" className="text-pink-600" /> <div><h4 className="font-bold">Women Help</h4><p className="text-sm text-gray-500">181</p></div></CustomCard>
+                            <CustomCard className="flex items-center gap-4"><Icon name="user" className="text-purple-600" /> <div><h4 className="font-bold">Elder Line</h4><p className="text-sm text-gray-500">14567</p></div></CustomCard>
+                        </div>
+                    </div>
+                )
+            };
+
+            return (
+                <div className="w-full h-screen bg-gray-100 flex items-center justify-center">
+                    <div className="w-full max-w-md h-full sm:h-[800px] bg-white relative sm:rounded-[3rem] sm:border-[8px] sm:border-gray-800 shadow-2xl overflow-hidden">
+                        {screens[step]}
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<WelfareApp />);
+    </script>
+</body>
+</html>
